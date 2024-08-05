@@ -1,8 +1,7 @@
 package com.restapi.Entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,14 +15,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class Book {
+public class Author {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int id;
-	private String bookName;
-	// private String author;
+	private int authorId;
+	private String firstName;
+	private String lastName;
+	private String language;
+	
+	@OneToOne(mappedBy = "author")
+	@JsonBackReference
+	private Book book;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JsonManagedReference
-	private Author author;
 }
