@@ -37,11 +37,12 @@ public class FileUploadController {
 			// file upload code
 			boolean upFile = fileUploadHelper.uploadFile(multipartFile);
 			if (upFile) {
-				//return ResponseEntity.ok("File uploaded Successfully");
-				
-				//Here we return full url of the image
-				//ServletUriComponentsBuilder.fromCurrentContextPath() - It will return localhost:3699
-				return ResponseEntity.ok(ServletUriComponentsBuilder.fromCurrentContextPath().path("/image/").path(multipartFile.getOriginalFilename()).toUriString());
+				// return ResponseEntity.ok("File uploaded Successfully");
+
+				// Here we are returning full url of the image
+				// ServletUriComponentsBuilder.fromCurrentContextPath() - It will return localhost:3699
+				return ResponseEntity.ok(ServletUriComponentsBuilder.fromCurrentContextPath().path("/image/")
+						.path(multipartFile.getOriginalFilename()).toUriString());
 			}
 
 		} catch (Exception e) {

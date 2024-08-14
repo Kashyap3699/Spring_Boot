@@ -1,11 +1,8 @@
 package com.restapi.Helper;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
@@ -16,11 +13,13 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class FileUploadHelper {
 
-	//public final String UPLOAD_DIR = "D:\\Kashyap Folder\\Spring boot\\Book_Restapi\\src\\main\\resources\\static\\image";
-	public final String UPLOAD_DIR = new ClassPathResource("static/image/").getFile().getAbsolutePath();
+	// public final String UPLOAD_DIR = "D:\\Kashyap Folder\\Springboot\\Book_Restapi\\src\\main\\resources\\static\\image";
 	
+	//dynamic path
+	public final String UPLOAD_DIR = new ClassPathResource("static/image/").getFile().getAbsolutePath();
+
 	public FileUploadHelper() throws IOException {
-		
+
 	}
 
 	public boolean uploadFile(MultipartFile multipartFile) {

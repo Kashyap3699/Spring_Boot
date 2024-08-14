@@ -36,14 +36,14 @@ public class BookService {
 
 	// --------------Get single book by id---------------
 	public Book getBookById(int id) {
-		Book book = null;
+		Optional<Book> book = null;
 		try {
 			// book = list.stream().filter(e -> e.getId() == id).findFirst().get();
 			book = bookRepository.findById(id);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return book;
+		return book.get();
 	}
 
 	// --------------- Adding Book ---------------------
