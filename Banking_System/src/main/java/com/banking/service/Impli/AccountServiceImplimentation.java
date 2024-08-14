@@ -6,13 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.banking.entity.Account;
-import com.banking.repository.BankRepository;
+import com.banking.repository.AccountRepository;
 import com.banking.service.AccountService;
 
 @Service
 public class AccountServiceImplimentation implements AccountService {
 	@Autowired
-	BankRepository repo;
+	AccountRepository repo;
 
 	@Override
 	public Account createAccount(Account account) {

@@ -23,7 +23,7 @@ public class User {
 	private String fullName;
 	private String gender;
 	private String address;
-	
+
 	@OneToOne(cascade = CascadeType.ALL)
 	@JsonManagedReference
 	private Account account;

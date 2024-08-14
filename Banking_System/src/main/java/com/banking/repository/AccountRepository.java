@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.banking.entity.Account;
 
-public interface BankRepository extends JpaRepository<Account, Long>{
+public interface AccountRepository extends JpaRepository<Account, Long> {
 
 }
