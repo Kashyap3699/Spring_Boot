@@ -12,7 +12,7 @@ public interface AccountService {
 
 	public List<Account> getAllAccounts();
 
-	public Account deposit(Long accountNumber, Double amount);
+	public Account deposit(Long accountNumber, double amount);
 
-	public Account withdraw(Long accountNumber, Double amount);
+	public Account withdraw(Long accountNumber, double amount);
 }

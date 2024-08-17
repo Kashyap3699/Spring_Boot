@@ -1,8 +1,12 @@
 package com.banking.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,5 +38,23 @@ public class AccountController {
 		}
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	}
-
+	
+	@GetMapping("/{id}")
+	public ResponseEntity<Account> getAccountByAccountNumber(@PathVariable Long accountNumber){
+		Account accountDetailByAccountNumber = accountservice.getAccountDetailByAccountNumber(accountNumber);
+		if(accountDetailByAccountNumber==null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
+		return ResponseEntity.status(HttpStatus.FOUND).body(accountDetailByAccountNumber);
+	}
+	
+	@GetMapping("/allAccount")
+	public ResponseEntity<List<Account>> getAllAccount(){
+		List<Account> allAccounts = accountservice.getAllAccounts();
+		if (allAccounts.size() <= 0) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
+		return ResponseEntity.status(HttpStatus.CREATED).body(allAccounts);
+	}
+	
 }
