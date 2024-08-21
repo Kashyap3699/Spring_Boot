@@ -42,6 +42,7 @@ public class SecurityConfig {
 				.password(passwordEncoder().encode("user123"))
 				.roles("USER")
 				.build();
+		
 		UserDetails admin = User.builder()
 				.username("Karan")
 				.password(passwordEncoder().encode("user123"))

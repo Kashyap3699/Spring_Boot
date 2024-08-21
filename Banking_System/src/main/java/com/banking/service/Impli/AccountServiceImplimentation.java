@@ -12,8 +12,10 @@ import com.banking.repository.AccountRepository;
 import com.banking.service.AccountService;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class AccountServiceImplimentation implements AccountService {
 	@Autowired
 	AccountRepository repo;
@@ -28,27 +30,31 @@ public class AccountServiceImplimentation implements AccountService {
 	@Override
 	public Account getAccountDetailByAccountNumber(Long accountNumber) {
 		// TODO Auto-generated method stub
-		Optional<Account> byId = null;
-		try {
-			byId = repo.findById(accountNumber);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return byId.get();
+		Optional<Account> byId = repo.findById(accountNumber);
+	    
+	    // Return the account if found, otherwise return null
+	    return byId.orElse(null);
 
 	}
 
 	@Override
 	public List<Account> getAllAccounts() {
 		// TODO Auto-generated method stub
-		return null;
+		List<Account> allaccounts = repo.findAll();
+		return allaccounts;
 	}
 
 	@Override
 	public Account deposit(Long accountNumber, double amount) {
 		// TODO Auto-generated method stub
-		return null;
+		Optional<Account> byId = repo.findById(accountNumber);
+		if (byId.isEmpty()) {
+			throw new RuntimeException("Account is not available");
+		}
+		Account account = byId.get();
+
+		account.setAccountBalance(account.getAccountBalance() + amount);
+		return repo.save(account);
 	}
 
 	@Override
@@ -56,26 +62,29 @@ public class AccountServiceImplimentation implements AccountService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	@Scheduled(fixedRate = 120000)
 	@Transactional
 	public void deductAmountFromAccounts() {
-        // Fetch all accounts with balance greater than 0
-        List<Account> accounts = repo.findByBalanceGreaterThan(0);
-        
-        for (Account account : accounts) {
-            double currentBalance = account.getAccountBalance();
-            if (currentBalance < 200) {
-                // Set balance to 0 if it's less than 200
-                account.setAccountBalance(0);;
-            } else {
-                // Deduct 200 rupees from the balance
-                account.setAccountBalance(currentBalance-200);
-            }
-            repo.save(account);
-        }
-    }
-	
-	
+		// Fetch all accounts with balance greater than 0
+		log.info("Scheduled task started");
+		List<Account> accounts = repo.findByAccountBalanceGreaterThan(0);
+
+		for (Account account : accounts) {
+			double currentBalance = account.getAccountBalance();
+			if (currentBalance < 200) {
+				// Set balance to 0 if it's less than 200
+				account.setAccountBalance(0);
+				
+			} else {
+				// Deduct 200 rupees from the balance
+				 log.info("Deducting 200 from account {}", account.getAccountNumber());
+				account.setAccountBalance(currentBalance - 200);
+			}
+			repo.save(account);
+			log.info("Account {} updated successfully", account.getAccountNumber());
+		}
+		log.info("Scheduled task completed");
+	}
 
 }

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,23 +39,43 @@ public class AccountController {
 		}
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	}
-	
-	@GetMapping("/{id}")
-	public ResponseEntity<Account> getAccountByAccountNumber(@PathVariable Long accountNumber){
+
+	@GetMapping("/{accountNumber}")
+	public ResponseEntity<Account> getAccountByAccountNumber(@PathVariable Long accountNumber) {
 		Account accountDetailByAccountNumber = accountservice.getAccountDetailByAccountNumber(accountNumber);
-		if(accountDetailByAccountNumber==null) {
+		if (accountDetailByAccountNumber == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
-		return ResponseEntity.status(HttpStatus.FOUND).body(accountDetailByAccountNumber);
+		return ResponseEntity.status(HttpStatus.OK).body(accountDetailByAccountNumber);
 	}
-	
+
 	@GetMapping("/allAccount")
-	public ResponseEntity<List<Account>> getAllAccount(){
+	public ResponseEntity<List<Account>> getAllAccount() {
 		List<Account> allAccounts = accountservice.getAllAccounts();
 		if (allAccounts.size() <= 0) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		return ResponseEntity.status(HttpStatus.CREATED).body(allAccounts);
 	}
-	
+
+	@PutMapping("/deposit/{accountNumber}/{amount}")
+	public ResponseEntity<Account> depositAmount(@PathVariable("accountNumber") Long accountNumber,
+			@PathVariable("amount") double amount) {
+		log.info("Received request to deposit {} into account {}", amount, accountNumber);
+		try {
+			if (amount <= 0) {
+				log.warn("Deposit amount must be greater than zero. Received amount: {}", amount);
+				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+			}
+
+			Account updatedAccount = accountservice.deposit(accountNumber, amount);
+			log.info("Successfully deposited {} into account {}", amount, accountNumber);
+			return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
+			
+		} catch (RuntimeException e) {
+			log.error("Error occurred while depositing {} into account {}: {}", amount, accountNumber, e.getMessage());
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			
+		} 
+	}
 }
