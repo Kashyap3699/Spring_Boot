@@ -40,7 +40,7 @@ public class UserController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<Users> getUserById(Long id) {
+	public ResponseEntity<Users> getUserById(@PathVariable Long id) {
 		Users userById = usersservice.getUserById(id);
 		if (userById == null) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -51,11 +51,13 @@ public class UserController {
 	@GetMapping("/allUsers")
 	public ResponseEntity<List<Users>> getAllUsers() {
 		List<Users> allUsers = usersservice.getAllUsers();
-		if (allUsers.size() <= 0) {
+		if (allUsers.isEmpty()) { // Check if the list is empty
+			log.warn("No users found");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
-		return ResponseEntity.status(HttpStatus.CREATED).body(allUsers);
 
+		log.info("Successfully retrieved {} users", allUsers.size());
+		return ResponseEntity.status(HttpStatus.OK).body(allUsers);
 	}
 
 	@PutMapping("/{id}")

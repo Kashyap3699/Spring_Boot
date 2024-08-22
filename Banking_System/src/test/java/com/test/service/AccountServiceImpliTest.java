@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -19,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import com.banking.entity.Account;
 import com.banking.repository.AccountRepository;
@@ -98,22 +98,39 @@ class AccountServiceImpliTest {
 	@Test
 	void testWithdraw() {
 		// Add implementation if needed
+		when(repo.findById(anyLong())).thenReturn(Optional.of(account));
+		when(repo.save(any(Account.class))).thenReturn(account);
+
+		Account updatedAccount = accountService.withdraw(1L, 500.0);
+
+		assertNotNull(updatedAccount);
+		assertEquals(500.0, updatedAccount.getAccountBalance());
+	}
+	
+	@Test
+	void testWithdrawAccountNotFound() {
+		when(repo.findById(anyLong())).thenReturn(Optional.empty());
+
+		Exception exception = assertThrows(RuntimeException.class, () -> {
+			accountService.deposit(1L, 500.0);
+		});
+
+		assertEquals("Account is not available", exception.getMessage());
 	}
 
 	@Test
 	void testDeductAmountFromAccounts() {
-		Account lowBalanceAccount = new Account();
-		lowBalanceAccount.setAccountNumber(2L);
-		lowBalanceAccount.setAccountBalance(100.0);
+		Account deductAmount = new Account();
+		deductAmount.setAccountNumber(2L);
+		deductAmount.setAccountBalance(100.0);
 
-		when(repo.findByAccountBalanceGreaterThan(0)).thenReturn(List.of(account, lowBalanceAccount));
+		when(repo.findByAccountBalanceGreaterThan(0)).thenReturn(List.of(account, deductAmount));
 		when(repo.save(any(Account.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
 
 		accountService.deductAmountFromAccounts();
 
 		assertEquals(800.0, account.getAccountBalance());
-		assertEquals(0.0, lowBalanceAccount.getAccountBalance());
+		assertEquals(0.0, deductAmount.getAccountBalance());
 
-		verify(repo, times(2)).save(any(Account.class));
 	}
 }

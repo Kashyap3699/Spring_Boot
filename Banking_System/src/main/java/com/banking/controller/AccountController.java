@@ -69,13 +69,38 @@ public class AccountController {
 			}
 
 			Account updatedAccount = accountservice.deposit(accountNumber, amount);
-			log.info("Successfully deposited {} into account {}", amount, accountNumber);
+			double accountBalanceAfterdeposit = updatedAccount.getAccountBalance();
+			log.info("Successfully deposit {} from account {}. New balance: {}", amount, accountNumber,
+					accountBalanceAfterdeposit);
 			return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
-			
+
 		} catch (RuntimeException e) {
 			log.error("Error occurred while depositing {} into account {}: {}", amount, accountNumber, e.getMessage());
 			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-			
-		} 
+
+		}
+	}
+
+	@PutMapping("/withdraw/{accountNumber}/{amount}")
+	public ResponseEntity<Account> withdrawAmount(@PathVariable("accountNumber") Long accountNumber,
+			@PathVariable("amount") double amount) {
+		log.info("Received request to withdraw {} into account {}", amount, accountNumber);
+		try {
+			if (amount <= 0) {
+				log.warn("Withdraw amount must be greater than zero. Received amount: {}", amount);
+				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+			}
+
+			Account updatedAccount = accountservice.withdraw(accountNumber, amount);
+			double accountBalanceAfterWithdraw = updatedAccount.getAccountBalance();
+			log.info("Successfully withdrew {} from account {}. New balance: {}", amount, accountNumber,
+					accountBalanceAfterWithdraw);
+			return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
+
+		} catch (RuntimeException e) {
+			log.error("Error occurred while withdraw {} into account {}: {}", amount, accountNumber, e.getMessage());
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+
+		}
 	}
 }

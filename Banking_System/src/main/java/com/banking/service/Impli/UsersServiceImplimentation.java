@@ -26,15 +26,8 @@ public class UsersServiceImplimentation implements UsersService {
 	@Override
 	public Users getUserById(Long id) {
 		// TODO Auto-generated method stub
-		Optional<Users> byId = null;
-		try {
-			byId = userRepo.findById(id);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return byId.get();
-
+		Optional<Users> byId = userRepo.findById(id);
+		return byId.orElse(null);
 	}
 
 	@Override
@@ -52,10 +45,5 @@ public class UsersServiceImplimentation implements UsersService {
 
 	}
 
-	@Override
-	public void deleteUserById(Users users, Long id) {
-		// TODO Auto-generated method stub
-
-	}
 
 }

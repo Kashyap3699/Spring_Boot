@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -34,8 +35,10 @@ class AccountControllerTest {
 	@InjectMocks
 	private AccountController accountController;
 
+	@Autowired
 	private MockMvc mockMvc;
 
+	@Autowired
 	private Account account;
 
 	@BeforeEach
@@ -134,6 +137,34 @@ class AccountControllerTest {
 				.thenThrow(new RuntimeException("Account not found"));
 
 		mockMvc.perform(put("/account/deposit/1/500"))
+				.andExpect(status().isNotFound());
+
+	}
+	
+	@Test
+	void testWithdrawAmount() throws Exception {
+		when(accountService.withdraw(anyLong(), anyDouble())).thenReturn(account);
+
+		mockMvc.perform(put("/account/withdraw/1/500"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.accountNumber").value(1))
+				.andExpect(jsonPath("$.accountBalance").value(5000.0));
+
+	}
+
+	@Test
+	void testWithdrawAmountInvalid() throws Exception {
+		mockMvc.perform(put("/account/withdraw/1/-500"))
+				.andExpect(status().isBadRequest());
+
+	}
+
+	@Test
+	void testWithdrawAmountNotFound() throws Exception {
+		when(accountService.withdraw(anyLong(), anyDouble()))
+				.thenThrow(new RuntimeException("Account not found"));
+
+		mockMvc.perform(put("/account/withdraw/1/500"))
 				.andExpect(status().isNotFound());
 
 	}

@@ -60,7 +60,16 @@ public class AccountServiceImplimentation implements AccountService {
 	@Override
 	public Account withdraw(Long accountNumber, double amount) {
 		// TODO Auto-generated method stub
-		return null;
+		Optional<Account> byId = repo.findById(accountNumber);
+		if (byId.isEmpty()) {
+			throw new RuntimeException("Account is not available");
+		}
+		Account account = byId.get();
+		if(account.getAccountBalance()<amount) {
+			throw new RuntimeException("Insufficient funds");
+		}
+		account.setAccountBalance(account.getAccountBalance() - amount);
+		return repo.save(account);
 	}
 
 	@Scheduled(fixedRate = 120000)
@@ -73,11 +82,9 @@ public class AccountServiceImplimentation implements AccountService {
 		for (Account account : accounts) {
 			double currentBalance = account.getAccountBalance();
 			if (currentBalance < 200) {
-				// Set balance to 0 if it's less than 200
 				account.setAccountBalance(0);
 				
 			} else {
-				// Deduct 200 rupees from the balance
 				 log.info("Deducting 200 from account {}", account.getAccountNumber());
 				account.setAccountBalance(currentBalance - 200);
 			}
