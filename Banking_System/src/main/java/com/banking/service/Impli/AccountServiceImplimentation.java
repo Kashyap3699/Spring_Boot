@@ -22,11 +22,7 @@ public class AccountServiceImplimentation implements AccountService {
 	@Autowired
 	AccountRepository accountRepository;
 
-//	@Override
-//	public Account createAccount(Account account) {
-//		Account save = accountRepository.save(account);
-//		return save;
-//	}
+
 	@Override
 	public ResponseEntity<Account> createAccount(Account account) {
 		// Validate input data
@@ -78,11 +74,7 @@ public class AccountServiceImplimentation implements AccountService {
 
 	}
 
-//	@Override
-//	public List<Account> getAllAccounts() {
-//		List<Account> allaccounts = accountRepository.findAll();
-//		return allaccounts;
-//	}
+
 	@Override
 	public ResponseEntity<List<Account>> getAllAccounts() {
 		try {
@@ -102,17 +94,7 @@ public class AccountServiceImplimentation implements AccountService {
 		}
 	}
 
-//	@Override
-//	public ResponseEntity<Account> deposit(Long accountNumber, Double amount) {
-//		Optional<Account> byId = accountRepository.findById(accountNumber);
-//		if (byId.isEmpty()) {
-//			throw new RuntimeException("Account is not available");
-//		}
-//		Account account = byId.get();
-//
-//		account.setAccountBalance(account.getAccountBalance() + amount);
-//		return accountRepository.save(account);
-//	}
+
 	@Override
 	public ResponseEntity<Account> deposit(Long accountNumber, Double amount) {
 		try {
