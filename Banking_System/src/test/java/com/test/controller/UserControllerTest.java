@@ -19,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -45,13 +47,15 @@ class UserControllerTest {
         user = new Users();
         user.setId(1L);
         user.setFullName("Kashyap Hainiya");
+        user.setAddress("Morbi");
+        user.setGender("Male");
     }
 
     @Test
     void testCreateUser() throws Exception {
-        when(usersService.createUser(any(Users.class))).thenReturn(user);
+        when(usersService.createUser(any(Users.class))).thenReturn(new ResponseEntity<>(user, HttpStatus.CREATED));
 
-        mockMvc.perform(post("/users/createUser")
+        mockMvc.perform(post("/users/create")
                 .contentType("application/json")
                 .content("{\"id\":1,\"fullName\":\"Kashyap Hainiya\"}"))
                 .andExpect(status().isCreated())
@@ -59,19 +63,11 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.fullName").value("Kashyap Hainiya"));
     }
 
-    @Test
-    void testCreateUserException() throws Exception {
-        when(usersService.createUser(any(Users.class))).thenThrow(new RuntimeException("Creation error"));
 
-        mockMvc.perform(post("/users/createUser")
-                .contentType("application/json")
-                .content("{\"id\":1,\"fullName\":\"Kashyap Hainiya\"}"))
-                .andExpect(status().isInternalServerError());
-    }
 
     @Test
     void testGetUserById() throws Exception {
-        when(usersService.getUserById(anyLong())).thenReturn(user);
+        when(usersService.getUserById(anyLong())).thenReturn(new ResponseEntity<>(user,HttpStatus.FOUND));
 
         mockMvc.perform(get("/users/{id}", 1))
                 .andExpect(status().isFound())
@@ -81,7 +77,7 @@ class UserControllerTest {
 
     @Test
     void testGetUserByIdNotFound() throws Exception {
-        when(usersService.getUserById(anyLong())).thenReturn(null);
+        when(usersService.getUserById(anyLong())).thenReturn(new ResponseEntity<>(user,HttpStatus.NOT_FOUND));
 
         mockMvc.perform(get("/users/{id}", 1))
                 .andExpect(status().isNotFound());
@@ -90,7 +86,7 @@ class UserControllerTest {
     @Test
     void testGetAllUsers() throws Exception {
         List<Users> usersList = Collections.singletonList(user);
-        when(usersService.getAllUsers()).thenReturn(usersList);
+       when(usersService.getAllUsers()).thenReturn(new ResponseEntity<>(usersList,HttpStatus.OK));
 
         mockMvc.perform(get("/users/allUsers"))
                 .andExpect(status().isOk())
@@ -100,15 +96,16 @@ class UserControllerTest {
 
     @Test
     void testGetAllUsersEmpty() throws Exception {
-        when(usersService.getAllUsers()).thenReturn(Collections.emptyList());
+        List<Users> usersList = Collections.singletonList(user);
+        when(usersService.getAllUsers()).thenReturn(new ResponseEntity<>(usersList,HttpStatus.NO_CONTENT));
 
         mockMvc.perform(get("/users/allUsers"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent());
     }
 
     @Test
     void testUpdateUserById() throws Exception {
-        when(usersService.updateUserById(any(Users.class), anyLong())).thenReturn(user);
+        when(usersService.updateUserById(any(Users.class), anyLong())).thenReturn(new ResponseEntity<>(user,HttpStatus.OK));
 
         mockMvc.perform(put("/users/{id}", 1)
                 .contentType("application/json")
@@ -120,7 +117,7 @@ class UserControllerTest {
 
     @Test
     void testUpdateUserByIdNotFound() throws Exception {
-        when(usersService.updateUserById(any(Users.class), anyLong())).thenReturn(null);
+        when(usersService.updateUserById(any(Users.class), anyLong())).thenReturn(new ResponseEntity<>(user,HttpStatus.NOT_FOUND));
 
         mockMvc.perform(put("/users/{id}", 1)
                 .contentType("application/json")
@@ -128,15 +125,6 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void testUpdateUserByIdException() throws Exception {
-        when(usersService.updateUserById(any(Users.class), anyLong()))
-                .thenThrow(new RuntimeException("Update error"));
 
-        mockMvc.perform(put("/users/{id}", 1)
-                .contentType("application/json")
-                .content("{\"id\":1,\"fullName\":\"Kashyap Hainiya\"}"))
-                .andExpect(status().isInternalServerError());
-    }
 }
 

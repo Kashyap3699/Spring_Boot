@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,58 +20,168 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountServiceImplimentation implements AccountService {
 	@Autowired
-	AccountRepository repo;
+	AccountRepository accountRepository;
 
+//	@Override
+//	public Account createAccount(Account account) {
+//		Account save = accountRepository.save(account);
+//		return save;
+//	}
 	@Override
-	public Account createAccount(Account account) {
-		// TODO Auto-generated method stub
-		Account save = repo.save(account);
-		return save;
-	}
+	public ResponseEntity<Account> createAccount(Account account) {
+		// Validate input data
 
-	@Override
-	public Account getAccountDetailByAccountNumber(Long accountNumber) {
-		// TODO Auto-generated method stub
-		Optional<Account> byId = repo.findById(accountNumber);
-	    
-	    // Return the account if found, otherwise return null
-	    return byId.orElse(null);
+		try {
+			if (account == null) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
 
-	}
-
-	@Override
-	public List<Account> getAllAccounts() {
-		// TODO Auto-generated method stub
-		List<Account> allaccounts = repo.findAll();
-		return allaccounts;
-	}
-
-	@Override
-	public Account deposit(Long accountNumber, double amount) {
-		// TODO Auto-generated method stub
-		Optional<Account> byId = repo.findById(accountNumber);
-		if (byId.isEmpty()) {
-			throw new RuntimeException("Account is not available");
+			if (account.getAccountType() == null || account.getAccountType().isEmpty()) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
+			// Validate Account balance
+			if (account.getAccountBalance() < 0) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Negative balance is not allowed
+			}
+			// Save the account
+			Account newAccount = new Account().builder().accountBalance(account.getAccountBalance())
+					.accountType(account.getAccountType())
+					.users(account.getUsers())
+					.build();
+			Account savedAccount = accountRepository.save(newAccount);
+			return new ResponseEntity<>(savedAccount, HttpStatus.CREATED);
+		} catch (Exception e) {
+			// Log and handle exception
+			log.error("Error occurred while creating account: {}", e.getMessage());
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		Account account = byId.get();
+	}
 
-		account.setAccountBalance(account.getAccountBalance() + amount);
-		return repo.save(account);
+
+	@Override
+	public ResponseEntity<Account> getAccountDetailByAccountNumber(Long accountNumber) {
+		try {
+			Optional<Account> optionalAccount = accountRepository.findById(accountNumber);
+			if (optionalAccount.isPresent()) {
+				Account account = optionalAccount.get();
+				return new ResponseEntity<>(account, HttpStatus.FOUND);
+
+			} else {
+				log.info("Account not found with accountNumber :: {}", accountNumber);
+				return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			}
+
+		} catch (Exception e) {
+			log.error("Error occurred while getting account {}: {}", accountNumber, e.getMessage());
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+	}
+
+//	@Override
+//	public List<Account> getAllAccounts() {
+//		List<Account> allaccounts = accountRepository.findAll();
+//		return allaccounts;
+//	}
+	@Override
+	public ResponseEntity<List<Account>> getAllAccounts() {
+		try {
+			List<Account> allAccounts = accountRepository.findAll();
+
+			if (allAccounts.isEmpty()) {
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+			} else {
+				return new ResponseEntity<>(allAccounts, HttpStatus.OK);
+			}
+
+		} catch (Exception e) {
+			// Log the exception
+			log.error("Error occurred while fetching all accounts: {}", e.getMessage());
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+//	@Override
+//	public ResponseEntity<Account> deposit(Long accountNumber, Double amount) {
+//		Optional<Account> byId = accountRepository.findById(accountNumber);
+//		if (byId.isEmpty()) {
+//			throw new RuntimeException("Account is not available");
+//		}
+//		Account account = byId.get();
+//
+//		account.setAccountBalance(account.getAccountBalance() + amount);
+//		return accountRepository.save(account);
+//	}
+	@Override
+	public ResponseEntity<Account> deposit(Long accountNumber, Double amount) {
+		try {
+
+			if (amount <= 0) {
+				log.error("Deposit amount must be greater than zero. Received amount: {}", amount);
+				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+			}
+			Optional<Account> optionalAccount = accountRepository.findById(accountNumber);
+
+			if (optionalAccount.isPresent()) {
+
+				Account account = optionalAccount.get();
+				account.setAccountBalance(account.getAccountBalance() + amount);
+				Account updatedAccount = accountRepository.save(account);
+
+				return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
+
+			} else {
+				log.info("Account not found with accountNumber :: {}", accountNumber);
+				return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			}
+
+		} catch (Exception e) {
+			log.error("Error occurred while deposit {} into account {}: {}", amount, accountNumber, e.getMessage());
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
 	}
 
 	@Override
-	public Account withdraw(Long accountNumber, double amount) {
-		// TODO Auto-generated method stub
-		Optional<Account> byId = repo.findById(accountNumber);
-		if (byId.isEmpty()) {
-			throw new RuntimeException("Account is not available");
+	public ResponseEntity<Account> withdraw(Long accountNumber, Double amount) {
+
+		try {
+
+			if (amount <= 0) {
+				log.error("Withdraw amount must be greater than zero. Received amount: {}", amount);
+				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+			}
+			Optional<Account> optionalAccount = accountRepository.findById(accountNumber);
+
+			if (optionalAccount.isPresent()) {
+
+				Account account = optionalAccount.get();
+
+				if (account.getAccountBalance() == null) {
+					log.error("Account balance is null for accountNumber :: {}", accountNumber);
+					return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+				}
+				if (account.getAccountBalance() < amount) {
+					log.error("Insufficient funds for accountNumber :: {}. Requested amount: {}, Available balance: {}",
+							accountNumber, amount, account.getAccountBalance());
+					return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+				}
+				account.setAccountBalance(account.getAccountBalance() - amount);
+				Account updatedAccount = accountRepository.save(account);
+
+				return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
+
+			} else {
+				log.info("Account not found with accountNumber :: {}", accountNumber);
+				return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			}
+
+		} catch (Exception e) {
+			log.error("Error occurred while withdraw {} into account {}: {}", amount, accountNumber, e.getMessage());
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		Account account = byId.get();
-		if(account.getAccountBalance()<amount) {
-			throw new RuntimeException("Insufficient funds");
-		}
-		account.setAccountBalance(account.getAccountBalance() - amount);
-		return repo.save(account);
+
 	}
 
 	@Scheduled(fixedRate = 120000)
@@ -77,18 +189,18 @@ public class AccountServiceImplimentation implements AccountService {
 	public void deductAmountFromAccounts() {
 		// Fetch all accounts with balance greater than 0
 		log.info("Scheduled task started");
-		List<Account> accounts = repo.findByAccountBalanceGreaterThan(0);
+		List<Account> accounts = accountRepository.findByAccountBalanceGreaterThan(0);
 
 		for (Account account : accounts) {
 			double currentBalance = account.getAccountBalance();
 			if (currentBalance < 200) {
-				account.setAccountBalance(0);
-				
+				account.setAccountBalance((double) 0);
+
 			} else {
-				 log.info("Deducting 200 from account {}", account.getAccountNumber());
+				log.info("Deducting 200 from account {}", account.getAccountNumber());
 				account.setAccountBalance(currentBalance - 200);
 			}
-			repo.save(account);
+			accountRepository.save(account);
 			log.info("Account {} updated successfully", account.getAccountNumber());
 		}
 		log.info("Scheduled task completed");

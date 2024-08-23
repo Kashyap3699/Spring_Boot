@@ -2,17 +2,19 @@ package com.banking.service;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
+
 import com.banking.entity.Users;
 
 public interface UsersService {
 
-	public Users createUser(Users users);
+	public ResponseEntity<Users> createUser(Users users);
 
-	public Users getUserById(Long id);
+	public ResponseEntity<Users> getUserById(Long id);
 
-	public List<Users> getAllUsers();
+	public ResponseEntity<List<Users>> getAllUsers();
 
-	public Users updateUserById(Users users, Long id);
+	public ResponseEntity<Users> updateUserById(Users users, Long id);
 
 
 }

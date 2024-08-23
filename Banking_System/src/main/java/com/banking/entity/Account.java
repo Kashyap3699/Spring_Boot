@@ -5,14 +5,17 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -20,22 +23,23 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Account {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long accountNumber;
-	private String accountType;
-	private double accountBalance;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long accountNumber;
+    private String accountType;
+    private Double accountBalance;
 
-	@CreationTimestamp
-	private LocalDateTime accountCreatedDateTime;
+    @CreationTimestamp
+    private LocalDateTime accountCreatedDateTime;
 
-	@UpdateTimestamp
-	private LocalDateTime accountUpdatedDateTime;
+    @UpdateTimestamp
+    private LocalDateTime accountUpdatedDateTime;
 
-	@OneToOne(mappedBy = "account")
-	@JsonBackReference
-	private Users users;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private Users users;
 
 }

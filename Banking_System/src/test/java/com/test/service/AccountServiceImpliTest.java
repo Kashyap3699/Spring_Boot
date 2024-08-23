@@ -1,14 +1,13 @@
 package com.test.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import com.banking.entity.Account;
 import com.banking.repository.AccountRepository;
@@ -40,37 +41,41 @@ class AccountServiceImpliTest {
 		account = new Account();
 		account.setAccountNumber(1L);
 		account.setAccountBalance(1000.0);
+		account.setAccountType("Saving");
 	}
 
 	@Test
 	void testCreateAccount() {
 		when(repo.save(any(Account.class))).thenReturn(account);
 
-		Account createdAccount = accountService.createAccount(account);
+		ResponseEntity<Account> createdAccount = accountService.createAccount(account);
 
+		assertEquals(HttpStatus.CREATED,createdAccount.getStatusCode());
 		assertNotNull(createdAccount);
-		assertEquals(1000.0, createdAccount.getAccountBalance());
+		assertEquals(account.getAccountBalance(), Objects.requireNonNull(createdAccount.getBody()).getAccountBalance());
 	}
 
 	@Test
 	void testGetAccountDetailByAccountNumber() {
 		when(repo.findById(anyLong())).thenReturn(Optional.of(account));
 
-		Account fetchedAccount = accountService.getAccountDetailByAccountNumber(1L);
+		ResponseEntity<Account> fetchedAccount = accountService.getAccountDetailByAccountNumber(1L);
 
+		assertEquals(HttpStatus.FOUND,fetchedAccount.getStatusCode());
 		assertNotNull(fetchedAccount);
-		assertEquals(1L, fetchedAccount.getAccountNumber());
+		assertEquals(1L, Objects.requireNonNull(fetchedAccount.getBody()).getAccountNumber());
 	}
 
 	@Test
 	void testGetAllAccounts() {
 		when(repo.findAll()).thenReturn(Collections.singletonList(account));
 
-		List<Account> accounts = accountService.getAllAccounts();
+		ResponseEntity<List<Account>> accounts = accountService.getAllAccounts();
 
+		assertEquals(HttpStatus.OK,accounts.getStatusCode());
 		assertNotNull(accounts);
-		assertEquals(1, accounts.size());
-		assertEquals(1000.0, accounts.get(0).getAccountBalance());
+		assertEquals(1, Objects.requireNonNull(accounts.getBody()).size());
+		assertEquals(1000.0, accounts.getBody().get(0).getAccountBalance());
 	}
 
 	@Test
@@ -78,21 +83,18 @@ class AccountServiceImpliTest {
 		when(repo.findById(anyLong())).thenReturn(Optional.of(account));
 		when(repo.save(any(Account.class))).thenReturn(account);
 
-		Account updatedAccount = accountService.deposit(1L, 500.0);
+		ResponseEntity<Account> updatedAccount = accountService.deposit(1L, 500.0);
 
 		assertNotNull(updatedAccount);
-		assertEquals(1500.0, updatedAccount.getAccountBalance());
+		assertEquals(1500.0, Objects.requireNonNull(updatedAccount.getBody()).getAccountBalance());
 	}
 
 	@Test
 	void testDepositAccountNotFound() {
 		when(repo.findById(anyLong())).thenReturn(Optional.empty());
 
-		Exception exception = assertThrows(RuntimeException.class, () -> {
-			accountService.deposit(1L, 500.0);
-		});
-
-		assertEquals("Account is not available", exception.getMessage());
+		ResponseEntity<Account> updatedAccount = accountService.deposit(1L, 500.0);
+		assertEquals(HttpStatus.NOT_FOUND,updatedAccount.getStatusCode());
 	}
 
 	@Test
@@ -101,22 +103,21 @@ class AccountServiceImpliTest {
 		when(repo.findById(anyLong())).thenReturn(Optional.of(account));
 		when(repo.save(any(Account.class))).thenReturn(account);
 
-		Account updatedAccount = accountService.withdraw(1L, 500.0);
+		ResponseEntity<Account> updatedAccount = accountService.withdraw(1L, 500.0);
 
 		assertNotNull(updatedAccount);
-		assertEquals(500.0, updatedAccount.getAccountBalance());
+		assertEquals(500.0, Objects.requireNonNull(updatedAccount.getBody()).getAccountBalance());
 	}
 	
 	@Test
 	void testWithdrawAccountNotFound() {
 		when(repo.findById(anyLong())).thenReturn(Optional.empty());
 
-		Exception exception = assertThrows(RuntimeException.class, () -> {
-			accountService.deposit(1L, 500.0);
-		});
-
-		assertEquals("Account is not available", exception.getMessage());
+		ResponseEntity<Account> updatedAccount = accountService.deposit(1L, 500.0);
+		assertNull(updatedAccount.getBody());
+		assertEquals(HttpStatus.NOT_FOUND,updatedAccount.getStatusCode());
 	}
+
 
 	@Test
 	void testDeductAmountFromAccounts() {
